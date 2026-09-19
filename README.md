@@ -19,15 +19,15 @@ Get a key at [typesafe.ai](https://docs.typesafe.ai).
 ## What's here
 
 - A short explainer on `state`, `questions`, and the three primitives.
-- Three live, editable panels — one per primitive — that hit the real Jev API:
+- A gallery of 12 examples, four per primitive, spanning support, moderation, recruiting, e-commerce, guardrails, and more. Click any card to open it, edit the state or criteria, and run it against the live model.
 
-| Primitive | Answer shape | Panel does |
+| Primitive | Answer shape | Examples |
 |---|---|---|
-| **Choice** | selected label + probability per option | routes a support ticket to a team |
-| **Noul** | single yes/no probability | detects a human-escalation request |
-| **Score** | probability-weighted position on a rubric | rates bug-report severity |
+| **Choice** | selected label + probability per option | support routing, content tagging, chatbot intent, recipe cuisine |
+| **Noul** | single yes/no probability | human escalation, spam/scam link, PII presence, LLM jailbreak attempt |
+| **Score** | probability-weighted position on a rubric | bug severity, resume-to-role fit, review sentiment, essay argument strength |
 
-Every panel's state, instructions, and criteria are editable — change the text, add or remove options/levels, and re-run against the live model.
+Every open panel's state, instructions, and criteria are editable — change the text, add or remove options/levels, and re-run against the live model. Source data for all examples lives in [`src/examples.ts`](src/examples.ts).
 
 See [`server/index.ts`](server/index.ts) for the generic `/api/run` route (built on `client.systemOne()` from `@typesafe-ai/sdk`) and [`src/main.ts`](src/main.ts) for the panel logic.
 

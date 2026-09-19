@@ -1,11 +1,12 @@
 import "./style.css";
+import { EXAMPLES, GROUPS, type Example, type PrimitiveType } from "./examples";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 app.innerHTML = `
   ${renderHero()}
   ${renderDocsSection()}
-  ${renderPlaygroundSection()}
+  ${renderGallerySection()}
   ${renderFooter()}
 `;
 
@@ -18,8 +19,8 @@ function renderHero(): string {
       <p>
         Jev is TypeSafe's "System One" model: instead of writing back text, it answers
         narrow questions about your <code>state</code> with a typed, probability-scored
-        judgment. Read how it works below, then run the three question types yourself
-        against the live API.
+        judgment. Read how it works below, then run ${EXAMPLES.length} real examples —
+        or edit any of them — against the live API.
       </p>
     </header>
   `;
@@ -52,33 +53,104 @@ function renderDocsSection(): string {
       </div>
 
       <div class="primitive-grid">
-        <div class="cell">
-          <div class="name">Choice</div>
-          <p>Picks one option out of a fixed set you define. Returns the winning label plus a probability for every option. Use it for routing and classification.</p>
-        </div>
-        <div class="cell">
-          <div class="name">Noul</div>
-          <p>Answers one yes/no condition as a single probability, <code>noul</code>, from 0 to 1. No separate confidence — the number is the answer. Use one Noul per label when several could apply at once.</p>
-        </div>
-        <div class="cell">
-          <div class="name">Score</div>
-          <p>Places the state on an ordered scale you describe level by level. Returns a probability-weighted score, a confidence, and the full distribution across levels.</p>
-        </div>
+        ${GROUPS.map(
+          (g) => `
+          <div class="cell">
+            <div class="name">${g.label}</div>
+            <p>${g.blurb}</p>
+          </div>
+        `,
+        ).join("")}
       </div>
     </section>
   `;
 }
 
-function renderPlaygroundSection(): string {
+function renderGallerySection(): string {
   return `
     <section id="playground">
-      <h2>02 · Try it</h2>
+      <h2>02 · Run it</h2>
       <div class="prose">
-        <p>Edit the state and the question for any panel below, then run it. These hit the real Jev API through this repo's server — nothing is mocked.</p>
+        <p>${EXAMPLES.length} examples across the three primitives. Click any card to open it, edit the state or criteria, and run it against the live Jev API — nothing here is mocked.</p>
       </div>
-      <div id="panels"></div>
+      ${GROUPS.map((g) => renderGalleryGroup(g.type, g.label)).join("")}
     </section>
   `;
+}
+
+function renderGalleryGroup(type: PrimitiveType, label: string): string {
+  const items = EXAMPLES.filter((e) => e.type === type);
+  return `
+    <div class="gallery-group">
+      <h3 class="gallery-group-title">${label}</h3>
+      <div class="gallery-grid" data-gallery-grid="${type}">
+        ${items.map((ex) => renderGalleryCard(ex)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderGalleryCard(ex: Example): string {
+  return `
+    <div class="gallery-item">
+      <button class="gallery-card" data-card="${ex.id}">
+        <span class="gc-usecase">${escapeHtml(ex.useCase)}</span>
+        <span class="gc-title">${escapeHtml(ex.title)}</span>
+        <span class="gc-expand" data-expand-indicator="${ex.id}">+</span>
+      </button>
+      <div class="panel-slot" data-slot="${ex.id}"></div>
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Wiring
+// ---------------------------------------------------------------------------
+
+const DEFAULT_OPEN = new Set(["choice-support-routing", "noul-human-escalation", "score-bug-severity"]);
+const openPanels = new Set<string>();
+
+document.querySelectorAll<HTMLButtonElement>("[data-card]").forEach((card) => {
+  const id = card.dataset.card!;
+  card.addEventListener("click", () => togglePanel(id));
+});
+
+for (const id of DEFAULT_OPEN) {
+  openPanel(id);
+}
+
+function togglePanel(id: string) {
+  if (openPanels.has(id)) {
+    closePanel(id);
+  } else {
+    openPanel(id);
+  }
+}
+
+function openPanel(id: string) {
+  const example = EXAMPLES.find((e) => e.id === id);
+  if (!example) return;
+  const slot = document.querySelector<HTMLDivElement>(`[data-slot="${id}"]`);
+  const indicator = document.querySelector<HTMLSpanElement>(`[data-expand-indicator="${id}"]`);
+  const card = document.querySelector<HTMLButtonElement>(`[data-card="${id}"]`);
+  if (!slot || openPanels.has(id)) return;
+
+  slot.innerHTML = renderPanel(example);
+  wirePanel(example);
+  openPanels.add(id);
+  if (indicator) indicator.textContent = "−";
+  card?.classList.add("active");
+}
+
+function closePanel(id: string) {
+  const slot = document.querySelector<HTMLDivElement>(`[data-slot="${id}"]`);
+  const indicator = document.querySelector<HTMLSpanElement>(`[data-expand-indicator="${id}"]`);
+  const card = document.querySelector<HTMLButtonElement>(`[data-card="${id}"]`);
+  if (!slot) return;
+  slot.innerHTML = "";
+  openPanels.delete(id);
+  if (indicator) indicator.textContent = "+";
+  card?.classList.remove("active");
 }
 
 function renderFooter(): string {
@@ -91,82 +163,14 @@ function renderFooter(): string {
 }
 
 // ---------------------------------------------------------------------------
-// Panels
+// Panel rendering (state/instructions/criteria editor + run + result)
 // ---------------------------------------------------------------------------
 
-type PrimitiveType = "choice" | "noul" | "score";
-
-interface ChoicePanelConfig {
-  type: "choice";
-  id: string;
-  state: string;
-  instructions: string;
-  options: { label: string; description: string }[];
-}
-
-interface NoulPanelConfig {
-  type: "noul";
-  id: string;
-  state: string;
-  instructions: string;
-  trueDesc: string;
-  falseDesc: string;
-}
-
-interface ScorePanelConfig {
-  type: "score";
-  id: string;
-  state: string;
-  instructions: string;
-  levels: string[];
-}
-
-type PanelConfig = ChoicePanelConfig | NoulPanelConfig | ScorePanelConfig;
-
-const PANELS: PanelConfig[] = [
-  {
-    type: "choice",
-    id: "choice-1",
-    state: "Help! My payments have been failing for three days and support hasn't replied.",
-    instructions: "Which team should handle this ticket?",
-    options: [
-      { label: "billing", description: "Payments, invoicing, refunds" },
-      { label: "technical", description: "Bugs, outages, integrations" },
-      { label: "sales", description: "Pricing, upgrades, new accounts" },
-    ],
-  },
-  {
-    type: "noul",
-    id: "noul-1",
-    state: "I've asked three times already. Can I please talk to a real person?",
-    instructions: "Is the customer asking to be escalated to a human agent?",
-    trueDesc: "Explicitly requests a human agent or live person",
-    falseDesc: "No mention of needing a human",
-  },
-  {
-    type: "score",
-    id: "score-1",
-    state: "Exporting to Safari crashes the app. There's no workaround and it affects every user on that browser.",
-    instructions: "How severe is this bug report?",
-    levels: [
-      "Cosmetic — minor visual issue, no functional impact",
-      "Workaround exists — annoying but users can get around it",
-      "No workaround — blocks a feature, affects a subset of users",
-      "Critical — blocks core functionality for all users",
-    ],
-  },
-];
-
-const panelsEl = document.querySelector<HTMLDivElement>("#panels")!;
-panelsEl.innerHTML = PANELS.map((p) => renderPanelShell(p)).join("");
-
-PANELS.forEach((config) => wirePanel(config));
-
-function renderPanelShell(config: PanelConfig): string {
+function renderPanel(config: Example): string {
   return `
     <div class="panel" data-panel="${config.id}">
       <div class="panel-head">
-        <span class="title">${config.id.split("-")[0]}</span>
+        <span class="title">${escapeHtml(config.title)}</span>
         <span class="type-badge">type: ${config.type}</span>
       </div>
       <div class="panel-body">
@@ -190,7 +194,7 @@ function renderPanelShell(config: PanelConfig): string {
   `;
 }
 
-function renderCriteriaFields(config: PanelConfig): string {
+function renderCriteriaFields(config: Example): string {
   if (config.type === "choice") {
     return `
       <div class="field">
@@ -245,7 +249,7 @@ function renderScoreLevel(panelId: string, index: number, text: string): string 
   `;
 }
 
-function wirePanel(config: PanelConfig) {
+function wirePanel(config: Example) {
   const panelEl = document.querySelector<HTMLDivElement>(`[data-panel="${config.id}"]`)!;
   const runBtn = panelEl.querySelector<HTMLButtonElement>(`[data-run="${config.id}"]`)!;
 
@@ -291,7 +295,7 @@ function wireAddRemove(
   bindRemoveButtons();
 }
 
-async function runPanel(config: PanelConfig, panelEl: HTMLDivElement, runBtn: HTMLButtonElement) {
+async function runPanel(config: Example, panelEl: HTMLDivElement, runBtn: HTMLButtonElement) {
   const errorSlot = panelEl.querySelector<HTMLDivElement>(`[data-error="${config.id}"]`)!;
   const resultEl = panelEl.querySelector<HTMLDivElement>(`[data-result="${config.id}"]`)!;
   errorSlot.innerHTML = "";
