@@ -22,13 +22,59 @@ body {
 }
 
 #app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 20px 96px;
+  width: 100%;
+}
+
+.page-shell {
+  width: 100%;
+  padding: 32px 40px 96px;
 }
 
 a {
   color: var(--text);
+}
+
+/* ---- nav ---- */
+
+.sitenav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--panel);
+}
+
+.sitenav .brand {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sitenav .links {
+  display: flex;
+  gap: 4px;
+}
+
+.sitenav .links a {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--muted);
+  padding: 5px 10px;
+  border: 1px solid transparent;
+}
+
+.sitenav .links a:hover {
+  color: var(--text);
+}
+
+.sitenav .links a.active {
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 /* ---- header ---- */
@@ -37,8 +83,14 @@ header.hero {
   border: 1px solid var(--border);
   padding: 40px 32px;
   margin-bottom: 40px;
-  position: relative;
   background: var(--panel);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(300px, 360px);
+  gap: 40px;
+  align-items: start;
 }
 
 header.hero .tag {
@@ -54,29 +106,80 @@ header.hero .tag {
 }
 
 header.hero h1 {
-  font-size: clamp(32px, 6vw, 48px);
+  font-size: clamp(32px, 4.5vw, 48px);
   line-height: 1.05;
   margin: 0 0 16px;
   letter-spacing: -0.02em;
 }
 
 header.hero p {
-  max-width: 560px;
+  max-width: 480px;
   color: var(--muted);
   font-size: 15px;
   line-height: 1.6;
   margin: 0;
 }
 
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 header.hero .meta {
-  position: absolute;
-  top: 40px;
-  right: 32px;
-  text-align: right;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  line-height: 1.6;
+}
+
+.hero-try {
+  border: 1px solid var(--border);
+  background: #fcfcfc;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.hero-try .field textarea {
+  font-size: 13px;
+}
+
+.hero-try-question {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.hero-try-q-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.hero-try .run {
+  width: 100%;
+}
+
+.hero-try .result {
+  padding-top: 12px;
+}
+
+@media (max-width: 860px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  header.hero .meta {
+    text-align: left;
+  }
 }
 
 /* ---- section ---- */
@@ -97,6 +200,7 @@ section > h2 {
 }
 
 .prose {
+  max-width: 720px;
   font-size: 15px;
   line-height: 1.7;
   color: #2a2a2a;
@@ -165,6 +269,17 @@ section > h2 {
   .primitive-grid {
     grid-template-columns: 1fr;
   }
+
+  .page-shell,
+  .sitenav,
+  footer.site .footer-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  header.hero {
+    padding: 28px 20px;
+  }
 }
 
 /* ---- gallery ---- */
@@ -203,8 +318,8 @@ section > h2 {
 }
 
 .gallery-item {
-  flex: 1 1 210px;
-  min-width: 210px;
+  flex: 1 1 250px;
+  min-width: 250px;
 }
 
 .gallery-item:has(.panel) {
@@ -526,16 +641,169 @@ button.run:disabled {
   margin-top: 4px;
 }
 
+/* ---- stats charts ---- */
+
+.stats-content {
+  min-height: 60px;
+}
+
+.stats-loading,
+.stats-empty {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  border: 1px dashed var(--border-soft);
+  padding: 24px;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--border-soft);
+  border: 1px solid var(--border-soft);
+}
+
+.stat-chart {
+  background: var(--panel);
+  padding: 20px;
+}
+
+.stat-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.stat-chart-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+/* horizontal bars: primitive mix, latency */
+
+.hbar-list {
+  display: grid;
+  gap: 12px;
+}
+
+.hbar-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbar-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.hbar-track {
+  height: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  position: relative;
+}
+
+.hbar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--border);
+  border-radius: 0 3px 3px 0;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hbar-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+  color: var(--text);
+}
+
+/* vertical bars: confidence histogram */
+
+.vbar-list {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 140px;
+}
+
+.vbar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.vbar-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.vbar-track {
+  width: 100%;
+  max-width: 28px;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.vbar-fill {
+  width: 100%;
+  height: 0%;
+  background: var(--border);
+  border-radius: 3px 3px 0 0;
+  min-height: 1px;
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vbar-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+  white-space: nowrap;
+}
+
+.stats-footnote {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .vbar-label {
+    font-size: 9px;
+  }
+}
+
 footer.site {
   border-top: 1px solid var(--border-soft);
-  padding-top: 20px;
   font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
+}
+
+footer.site .footer-inner {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 20px 40px 32px;
 }
 
 footer.site a {

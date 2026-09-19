@@ -15,6 +15,25 @@ interface RunBody {
   criteria: unknown;
 }
 
+interface RunRecord {
+  type: "choice" | "noul" | "score";
+  confidence: number;
+  ms: number;
+  at: number;
+}
+
+const MAX_RECORDS = 500;
+const runLog: RunRecord[] = [];
+
+function recordRun(type: RunRecord["type"], confidence: number, ms: number) {
+  runLog.push({ type, confidence, ms, at: Date.now() });
+  if (runLog.length > MAX_RECORDS) runLog.shift();
+}
+
+function confidenceOf(type: RunRecord["type"], answer: { confidence?: number; noul?: number }): number {
+  return type === "noul" ? Math.max(answer.noul!, 1 - answer.noul!) : answer.confidence!;
+}
+
 function parseState(raw: string): EntryType {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -66,15 +85,20 @@ app.post("/api/run", async (req, res) => {
       question = score(instructions, criteria);
     }
 
+    const startedAt = Date.now();
     const response = await client.systemOne({
       state,
       questions: { answer: question },
     });
+    const ms = Date.now() - startedAt;
+
+    recordRun(type, confidenceOf(type, response.answers.answer), ms);
 
     res.json({
       answer: response.answers.answer,
       model: response.model,
       usage: response.usage,
+      ms,
     });
   } catch (err) {
     console.error("Jev request failed:", err);
@@ -85,6 +109,42 @@ app.post("/api/run", async (req, res) => {
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, hasKey: Boolean(process.env.TYPESAFE_API_KEY) });
+});
+
+const CONFIDENCE_BUCKETS = [
+  { label: "50-60%", min: 0.5, max: 0.6 },
+  { label: "60-70%", min: 0.6, max: 0.7 },
+  { label: "70-80%", min: 0.7, max: 0.8 },
+  { label: "80-90%", min: 0.8, max: 0.9 },
+  { label: "90-100%", min: 0.9, max: 1.001 },
+];
+
+app.get("/api/stats", (_req, res) => {
+  const total = runLog.length;
+
+  const byType: Record<RunRecord["type"], number> = { choice: 0, noul: 0, score: 0 };
+  const confidenceBuckets = CONFIDENCE_BUCKETS.map((b) => ({ label: b.label, count: 0 }));
+  const msByType: Record<RunRecord["type"], number[]> = { choice: [], noul: [], score: [] };
+
+  for (const r of runLog) {
+    byType[r.type]++;
+    msByType[r.type].push(r.ms);
+    const bucketIndex = CONFIDENCE_BUCKETS.findIndex((b) => r.confidence >= b.min && r.confidence < b.max);
+    if (bucketIndex >= 0) confidenceBuckets[bucketIndex].count++;
+  }
+
+  const avgMsByType = (Object.keys(msByType) as RunRecord["type"][]).map((type) => {
+    const values = msByType[type];
+    const avg = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+    return { type, avgMs: avg, count: values.length };
+  });
+
+  res.json({
+    total,
+    byType,
+    confidenceBuckets,
+    avgMsByType,
+  });
 });
 
 const port = Number(process.env.PORT ?? 8787);

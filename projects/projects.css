@@ -1,0 +1,179 @@
+.status-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border: 1px solid var(--border-soft);
+  padding: 3px 8px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.project {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 32px;
+  margin-bottom: 40px;
+}
+
+.project-head h2 {
+  font-size: clamp(22px, 4vw, 28px);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.project-head .one-liner {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0 0 28px;
+  max-width: 620px;
+}
+
+.project-block {
+  margin-bottom: 28px;
+}
+
+.project-block:last-child {
+  margin-bottom: 0;
+}
+
+.project-block h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.project-block p {
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #2a2a2a;
+  margin: 0;
+}
+
+.diagram {
+  border: 1px solid var(--border-soft);
+  background: #fdfdfd;
+  padding: 20px;
+  overflow-x: auto;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.jev-role-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.jev-role-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.jev-role-table td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  color: #2a2a2a;
+}
+
+.jev-role-table tr:last-child td {
+  border-bottom: none;
+}
+
+.type-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.notes-list {
+  max-width: 760px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.notes-list li {
+  margin-bottom: 6px;
+}
+
+.notes-list li:last-child {
+  margin-bottom: 0;
+}
+
+.examples-intro {
+  margin-bottom: 16px !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+}
+
+.example-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.example-panels .panel {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .project {
+    padding: 20px;
+  }
+
+  .jev-role-table {
+    display: block;
+  }
+
+  .jev-role-table thead {
+    display: none;
+  }
+
+  .jev-role-table tbody,
+  .jev-role-table tr,
+  .jev-role-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .jev-role-table tr {
+    border-bottom: 1px solid var(--border-soft);
+    padding: 10px 0;
+  }
+
+  .jev-role-table td {
+    border-bottom: none;
+    padding: 3px 0;
+  }
+
+  .jev-role-table td:first-child {
+    font-weight: 500;
+  }
+}
